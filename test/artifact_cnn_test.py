@@ -1,10 +1,12 @@
 """Unit tests for artifact_cnn.py"""
 
+import sys
 import unittest
 
 import numpy as np
 import torch
 
+sys.path.append('..')
 import artifact_cnn
 import cnn_utils
 
@@ -13,7 +15,7 @@ class StampEvaluatorTest(unittest.TestCase):
 
     def setUp(self):
         self.stamps = np.random.uniform(size=(10, 3, 51, 51))
-        self.obj = artifact_cnn.StampEvaluator(self.stamps)
+        self.obj = artifact_cnn.StampEvaluator(self.stamps, model_dir='..')
         self.dataset = self.obj.make_dataset()
 
     def test_stored_attributes(self):
@@ -69,7 +71,7 @@ class StampEvaluatorTest(unittest.TestCase):
         stamp_array = np.load('test_stamps.npy', allow_pickle=True)
         stamp_md = np.load('test_stamp_metadata.npy', allow_pickle=True)
         stamp_evaluator = artifact_cnn.StampEvaluator(
-            stamp_array, stamp_md[0], stamp_md[1], stamp_md[2])
+            stamp_array, stamp_md[0], stamp_md[1], stamp_md[2], model_dir='..')
         scores = stamp_evaluator.run()
 
         allowed_ranges = np.load('test_stamp_ranges.npy', allow_pickle=True)

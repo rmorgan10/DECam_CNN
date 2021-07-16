@@ -27,7 +27,7 @@ class StampEvaluator:
     def __init__(
             self, stamps: np.ndarray, psf_array: np.ndarray = None,
             flux_array: np.ndarray = None, fluxerr_array: np.ndarray = None,
-            masking_box_width: int = 14):
+            masking_box_width: int = 14, model_dir = '.'):
         """Instnatiates a StampEvaluator object.
 
         Stores stamps, thresholds, and trained CNNs as class attributes.
@@ -43,6 +43,7 @@ class StampEvaluator:
             each detection in stamps.
           masking_box_width (int): Side length of box to check for masking
             in diff images.
+          model_dir (str): Path to models, default is CWD.
         """
         self.stamps = stamps
         self.psf = psf_array
@@ -52,6 +53,7 @@ class StampEvaluator:
         self.flux_threshold = 13.86
         self.cnn1_threshold = 0.5027928
         self.masking_box_width = masking_box_width
+        self.model_dir = model_dir
         self.load_cnns()
 
     def run(self):
@@ -70,10 +72,10 @@ class StampEvaluator:
     def load_cnns(self):
         """Instantiates CNNs and stores them as class attributes."""
         self.cnn1 = cnn_utils.CNN()
-        self.cnn1.load_state_dict(torch.load('model1.pt'))
+        self.cnn1.load_state_dict(torch.load(f'{self.model_dir}/model1.pt'))
         self.cnn1.eval()
         self.cnn2 = cnn_utils.CNN()
-        self.cnn2.load_state_dict(torch.load('model2.pt'))
+        self.cnn2.load_state_dict(torch.load(f'{self.model_dir}/model2.pt'))
         self.cnn2.eval()
 
     def make_dataset(self) -> torch.utils.data.Dataset:

@@ -1,11 +1,13 @@
 """Unit tests for cnn_utils.py."""
 
+import sys
 import unittest
 
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 
+sys.path.append('..')
 import cnn_utils
 
 class ArtifactDatasetTest(unittest.TestCase):

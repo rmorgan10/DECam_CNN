@@ -19,7 +19,8 @@ class StampEvaluatorTest(unittest.TestCase):
     def test_stored_attributes(self):
         expected_attributes = (
             'cnn1', 'cnn2', 'flux_threshold', 'snr_threshold',
-            'cnn1_threshold', 'stamps')
+            'cnn1_threshold', 'stamps', 'flux', 'fluxerr', 'psf',
+            'masking_box_width')
         for attribute in expected_attributes:
             self.assertTrue(hasattr(self.obj, attribute))
 
@@ -41,6 +42,19 @@ class StampEvaluatorTest(unittest.TestCase):
             self.assertEqual(len(scores), len(self.stamps))
             self.assertLessEqual(scores.max(), 1.0)
             self.assertGreaterEqual(scores.min(), 0.0)
+            
+    def test_scale_scores(self):
+        # CNN 1
+        scores = np.array([-60., -50., -30., -10., -0.001])
+        scaled_scores = self.obj._scale_scores(scores, 'cnn1')
+        expected_scaled_scores = np.array([0.0, 0.0, 0.95225653, 1.0, 1.0])
+        self.assertTrue(np.allclose(scaled_scores, expected_scaled_scores))
+
+        # CNN 2
+        scores = np.array([-10., -5., -1., -0.001])
+        scaled_scores =	self.obj._scale_scores(scores, 'cnn2')
+        expected_scaled_scores = np.array([0., 0.23331225, 0.8468432, 1.])
+        self.assertTrue(np.allclose(scaled_scores, expected_scaled_scores))
 
     def test_score_stamps(self):
         preprocess_mask = np.array([0, 1, 1, 1], dtype=bool)
@@ -50,6 +64,20 @@ class StampEvaluatorTest(unittest.TestCase):
             preprocess_mask, cnn1_scores, cnn2_scores)
         expected_output = np.array([0.0, 0.04, 0.8, 0.1])
         self.assertTrue(np.array_equal(output, expected_output))
+
+    def test_real_data(self):
+        stamp_array = np.load('test_stamps.npy', allow_pickle=True)
+        stamp_md = np.load('test_stamp_metadata.npy', allow_pickle=True)
+        stamp_evaluator = artifact_cnn.StampEvaluator(
+            stamp_array, stamp_md[0], stamp_md[1], stamp_md[2])
+        scores = stamp_evaluator.run()
+
+        allowed_ranges = np.load('test_stamp_ranges.npy', allow_pickle=True)
+        total = 0
+        for score, allowed_range in zip(scores, allowed_ranges):
+            total += (score > allowed_range[0] and score < allowed_range[1])
+        
+        self.assertGreaterEqual(total, len(stamp_array) // 2)
 
 
 if __name__ == '__main__':
